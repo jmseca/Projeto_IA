@@ -7,6 +7,7 @@
 # 95764 Wanghao Zhu
 
 import sys
+import numpy as np
 from search import (
     Problem,
     Node,
@@ -31,40 +32,47 @@ class TakuzuState:
 
     # TODO: outros metodos da classe
 
-
 class Board:
     """Representação interna de um tabuleiro de Takuzu."""
 
+    def __init__(self, size, tabl):
+        self.size = size
+        self.tabl = tabl
+
     def get_number(self, row: int, col: int) -> int:
         """Devolve o valor na respetiva posição do tabuleiro."""
-        # TODO
-        pass
+        return self.tabl[row][col]
+        
 
     def adjacent_vertical_numbers(self, row: int, col: int) -> (int, int):
         """Devolve os valores imediatamente abaixo e acima,
         respectivamente."""
-        # TODO
-        pass
+        low = None if (self.size == (row-1)) else self.tabl[(row+1)][col]
+        high = None if (row == 0) else self.tabl[(row-1)][col]
+        return (low,high)
 
     def adjacent_horizontal_numbers(self, row: int, col: int) -> (int, int):
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
-        # TODO
-        pass
+        right = None if (self.size == (col-1)) else self.tabl[row][(col+1)]
+        left = None if (self.size == 0) else self.tabl[row][(col-1)]
+        return (left,right)
 
     @staticmethod
     def parse_instance_from_stdin():
         """Lê o test do standard input (stdin) que é passado como argumento
         e retorna uma instância da classe Board.
-
-        Por exemplo:
-            $ python3 takuzu.py < input_T01
-
-            > from sys import stdin
-            > stdin.readline()
         """
-        # TODO
-        pass
+        readInput = True
+        size = int(sys.stdin.readline())
+        tabl = np.zeros(shape=(size,size), dtype=np.ubyte)
+        for i in range(size):
+            newLine = sys.stdin.readline()
+            newLineEl = newLine.split('\t')
+            tabl[i] = np.asarray(newLineEl)
+        board = Board(size,tabl)
+        return board
+        
 
     # TODO: outros metodos da classe
 
