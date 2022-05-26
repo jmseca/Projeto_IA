@@ -47,15 +47,15 @@ class Board:
     def adjacent_vertical_numbers(self, row: int, col: int) -> (int, int):
         """Devolve os valores imediatamente abaixo e acima,
         respectivamente."""
-        low = None if (self.size == (row-1)) else self.tabl[(row+1)][col]
+        low = None if (self.size == (row+1)) else self.tabl[(row+1)][col]
         high = None if (row == 0) else self.tabl[(row-1)][col]
         return (low,high)
 
     def adjacent_horizontal_numbers(self, row: int, col: int) -> (int, int):
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
-        right = None if (self.size == (col-1)) else self.tabl[row][(col+1)]
-        left = None if (self.size == 0) else self.tabl[row][(col-1)]
+        right = None if (self.size == (col+1)) else self.tabl[row][(col+1)]
+        left = None if (col == 0) else self.tabl[row][(col-1)]
         return (left,right)
 
     @staticmethod
