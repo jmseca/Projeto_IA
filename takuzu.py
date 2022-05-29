@@ -58,6 +58,64 @@ class Board:
         left = None if (col == 0) else self.tabl[row][(col-1)]
         return (left,right)
 
+    def acceptable_zeros_ones_count_row(self, row: int):
+        """Verifica se o número de 0's e 1's é válido para uma dada linha"""
+        r = self.tabl[row]
+        count = np.bincount(r)
+        return (count[2]==0 and ( (self.size%2==0 and count[0]==count[1]) or (self.size%2==1 and abs(count[0]-count[1])==1)))
+
+    def acceptable_zeros_ones_count_col(self, col: int):
+        """Verifica se o número de 0's e 1's é válido para uma dada coluna"""
+        c = self.tabl[:,c]
+        count = np.bincount(c)
+        return (count[2]==0 and ( (self.size%2==0 and count[0]==count[1]) or (self.size%2==1 and abs(count[0]-count[1])==1)))
+
+    def acceptable_zeros_ones_count(self):
+        """Verifica se o número de 0's e 1's é válido"""
+        accept = True
+        i=0
+        while (accept and i<self.size):
+            accept = self.acceptable_zeros_ones_count_row(i) and self.acceptable_zeros_ones_count_col(i)
+            i+=1
+        return accept
+
+    def no_3_adjacent(self):
+        """
+        Verifica se não há mais do que dois números iguais adjacentes (horizontal ou verticalmente) um ao
+        outro
+        Devolve True se o tabuleiro respeita a regra, False caso contrario
+        """
+        accept = True
+        limit = (self.size -1) 
+        i=1
+        while (accept and i<limit):
+            n=1
+            while (accept and n<limit):
+                elem = self.tabl[i,n]
+                hori = self.adjacent_horizontal_numbers(i,n)
+                vert = self.adjacent_vertical_numbers(i,n)
+                accept = ((hori[0]!=hori[1] or hori[0]!=elem) or (vert[0]!=vert[1] or vert[0]!=elem))
+                n+=1
+            i+=1
+        return accept
+
+    def all_rows_diff(self):
+        """Testa se as linhas do tabuleiro são todas diferentes"""
+        return len(self.tabl) == len(np.unique(self.table,axis=0))
+
+    def all_cols_diff(self):
+        """Testa se as colunas do tabuleiro são todas diferentes"""
+        return len(self.tabl) == len(np.unique(self.table,axis=1))
+
+    def __str__(self):
+        out = ""
+        for row in self.tabl:
+            for element in row:
+                out += str(element)+"\t"
+            out += "\n"
+        return out
+
+
     @staticmethod
     def parse_instance_from_stdin():
         """Lê o test do standard input (stdin) que é passado como argumento
@@ -72,6 +130,7 @@ class Board:
             tabl[i] = np.asarray(newLineEl)
         board = Board(size,tabl)
         return board
+
         
 
     # TODO: outros metodos da classe
@@ -101,8 +160,9 @@ class Takuzu(Problem):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas com uma sequência de números adjacentes."""
-        # TODO
-        pass
+        return self.board.acceptable_zeros_ones_count()  and self.board.no_3_adjacent() \
+            and self.board.all_rows_diff() and self.board.all_cols_diff()
+        
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
@@ -113,7 +173,7 @@ class Takuzu(Problem):
 
 
 if __name__ == "__main__":
-    # TODO:
+    startBoard = Board.parse_instance_from_stdin()
     # Ler o ficheiro de input de sys.argv[1],
     # Usar uma técnica de procura para resolver a instância,
     # Retirar a solução a partir do nó resultante,

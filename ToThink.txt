@@ -1,0 +1,4 @@
+Este ficheiro serve para anotar coisas sobre o projeto.
+Poderão ser ToDo's ou coisas a melhorar caso haja falhas no tempo/espaço
+========================================================================
+
