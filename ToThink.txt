@@ -22,3 +22,6 @@ Será que é boa ideia:
 Devolver [1,[...]], quando o que está em [...] são acoes diretas 
 Devolver [0,[...]], quando [...] não sao acoes diretas
 Ação Direta: Quando sabemos que uma casa vazia tem de ser 0 ou 1
+
+
+contar n de quadrados preenchidos
