@@ -2,3 +2,16 @@ Este ficheiro serve para anotar coisas sobre o projeto.
 Poderão ser ToDo's ou coisas a melhorar caso haja falhas no tempo/espaço
 ========================================================================
 
+Casos diretos
+
+_ 0 _ _ 1 0 1 1
+Nesta linha só falta 1 1, que tem de impedir que haja 3 0's consecutivos, logo tem de ficar à esquerda do 0 sozinho
+0 0 1 0 1 0 1 1
+
+_ _ 1 0 0 1 _ 0
+O mesmo do de cima, só falta 1 0 e tem de impedir que haja 3 1's seguidos. Tem ficar numa das duas primeiras casas,
+por isso a última casa tem de ser um 1
+_ _ 1 0 0 1 1 0
+
+Mas será que vale mais a pena explorar estas hipoteses de maneira "burra" ou ter um pequeno algoritmo que demora algum
+tempo, mas que preenche logo algumas posicoes
