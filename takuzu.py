@@ -38,6 +38,7 @@ class Board:
     def __init__(self, size, tabl):
         self.size = size
         self.tabl = tabl
+        self.n_filled=0
 
     def get_number(self, row: int, col: int) -> int:
         """Devolve o valor na respetiva posição do tabuleiro."""
@@ -101,11 +102,14 @@ class Board:
 
     def all_rows_diff(self):
         """Testa se as linhas do tabuleiro são todas diferentes"""
-        return len(self.tabl) == len(np.unique(self.table,axis=0))
+        return len(self.tabl) == len(np.unique(self.tabl,axis=0))
 
     def all_cols_diff(self):
         """Testa se as colunas do tabuleiro são todas diferentes"""
-        return len(self.tabl) == len(np.unique(self.table,axis=1))
+        return len(self.tabl) == len(np.unique(self.tabl,axis=1))
+    
+    def all_filled(self):
+        return self.n_filled==self.size*self.size
 
     def __str__(self):
         out = ""
@@ -160,9 +164,8 @@ class Takuzu(Problem):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas com uma sequência de números adjacentes."""
-        return self.board.acceptable_zeros_ones_count()  and self.board.no_3_adjacent() \
+        return self.board.all_filled() and self.board.acceptable_zeros_ones_count()  and self.board.no_3_adjacent() \
             and self.board.all_rows_diff() and self.board.all_cols_diff()
-        
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
