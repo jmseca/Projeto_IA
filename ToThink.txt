@@ -15,3 +15,10 @@ _ _ 1 0 0 1 1 0
 
 Mas será que vale mais a pena explorar estas hipoteses de maneira "burra" ou ter um pequeno algoritmo que demora algum
 tempo, mas que preenche logo algumas posicoes
+
+
+Takuzu - função actions
+Será que é boa ideia:
+Devolver [1,[...]], quando o que está em [...] são acoes diretas 
+Devolver [0,[...]], quando [...] não sao acoes diretas
+Ação Direta: Quando sabemos que uma casa vazia tem de ser 0 ou 1
