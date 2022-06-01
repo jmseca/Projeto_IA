@@ -48,15 +48,15 @@ class Board:
     def adjacent_vertical_numbers(self, row: int, col: int) -> (int, int):
         """Devolve os valores imediatamente abaixo e acima,
         respectivamente."""
-        low = None if (self.size == (row+1)) else self.tabl[(row+1)][col]
-        high = None if (row == 0) else self.tabl[(row-1)][col]
+        low = None if (self.size == (row+1)) else self.get_number(row+1, col)
+        high = None if (row == 0) else self.get_number(row-1, col)
         return (low,high)
 
     def adjacent_horizontal_numbers(self, row: int, col: int) -> (int, int):
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
-        right = None if (self.size == (col+1)) else self.tabl[row][(col+1)]
-        left = None if (col == 0) else self.tabl[row][(col-1)]
+        right = None if (self.size == (col+1)) else self.get_number(row, col+1)
+        left = None if (col == 0) else self.get_number(row, col-1)
         return (left,right)
 
     def acceptable_zeros_ones_count_row(self, row: int):
@@ -94,7 +94,7 @@ class Board:
         while (accept and i<limit):
             n=1
             while (accept and n<limit):
-                elem = self.tabl[i,n]
+                elem = self.get_number(i, n)
                 hori = self.adjacent_horizontal_numbers(i,n)
                 vert = self.adjacent_vertical_numbers(i,n)
                 accept = ((hori[0]!=hori[1] or hori[0]!=elem) or (vert[0]!=vert[1] or vert[0]!=elem))
@@ -110,18 +110,18 @@ class Board:
         """Testa se as colunas do tabuleiro são todas diferentes"""
         return len(self.tabl) == len(np.unique(self.tabl,axis=1))
     
-    def all_filled(self):
+    def filled(self):
         return self.n_filled==self.size*self.size
 
-    def get_empty_pos_with_certain_value(self):
-        """Devolve lista de listas [l,c,n] sendo o valor n a pren
-        ef
-        ef
-        e
-        f_min_bef
-        ed"""
-        direct=[]
-        indirect=[]
+    def get_direct_indirect_pos(self):
+        """
+        Devolve 2 listas, 1 com as posicoes vazias com valor obrigatorio (a) e outra com as posicoes vazias
+        cujo valor ainda não é sabido (b).
+        a - [[row,col,val], ... ]
+        b - [[1,row,col,val1], [1,row,col,val0]]
+        """
+        direct,indirect=[],[]
+        done_indirect = True
         for row in range(self.size):
             for col in range(self.size):
                 n=self.get_number(row,col)
@@ -132,8 +132,9 @@ class Board:
                         direct += [[row,col,1-left]]
                     elif low==high and low!=2:
                         direct += [[row,col,1-low]]
-                    else:
-                        indirect +=[[1, row,col,0],[1, row,col,1]]
+                    elif done_indirect:
+                        indirect = [[1, row,col,0],[1, row,col,1]]
+                        done_indirect = False
                 else:
                     if n==left and right==2:
                         direct += [[row,col+1,1-n]]
@@ -208,7 +209,7 @@ class Takuzu(Problem):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas com uma sequência de números adjacentes."""
-        return self.board.all_filled() and self.board.acceptable_zeros_ones_count()  and self.board.no_3_adjacent() \
+        return self.board.filled() and self.board.acceptable_zeros_ones_count()  and self.board.no_3_adjacent() \
             and self.board.all_rows_diff() and self.board.all_cols_diff()
 
     def h(self, node: Node):
