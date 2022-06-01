@@ -63,14 +63,16 @@ class Board:
         """Verifica se o número de 0's e 1's é válido para uma dada linha"""
         r = self.tabl[row]
         count = np.bincount(r)
-        return (count[2]==0 and ( (self.size%2==0 and count[0]==count[1]) or (self.size%2==1 and abs(count[0]-count[1])==1)))
+        diff = abs(count[0]-count[1])
+        return diff==0 or diff==1
 
     def acceptable_zeros_ones_count_col(self, col: int):
         """Verifica se o número de 0's e 1's é válido para uma dada coluna"""
         c = self.tabl[:,c]
         count = np.bincount(c)
-        return (count[2]==0 and ( (self.size%2==0 and count[0]==count[1]) or (self.size%2==1 and abs(count[0]-count[1])==1)))
-
+        diff = abs(count[0]-count[1])
+        return diff==0 or diff==1
+        
     def acceptable_zeros_ones_count(self):
         """Verifica se o número de 0's e 1's é válido"""
         accept = True
