@@ -113,6 +113,42 @@ class Board:
     def all_filled(self):
         return self.n_filled==self.size*self.size
 
+    def get_empty_pos_with_certain_value(self):
+        """Devolve lista de listas [l,c,n] sendo o valor n a pren
+        ef
+        ef
+        e
+        f_min_bef
+        ed"""
+        direct=[]
+        indirect=[]
+        for row in range(self.size):
+            for col in range(self.size):
+                n=self.get_number(row,col)
+                (left,right)=self.adjacent_horizontal_numbers(row,col)
+                (low,high)=self.adjacent_vertical_numbers(row,col)
+                if n==2:
+                    if left==right and left!=2:
+                        direct += [[row,col,1-left]]
+                    elif low==high and low!=2:
+                        direct += [[row,col,1-low]]
+                    else:
+                        indirect +=[[1, row,col,0],[1, row,col,1]]
+                else:
+                    if n==left and right==2:
+                        direct += [[row,col+1,1-n]]
+                    elif n==right and left==2:
+                        direct += [[row,col-1,1-n]]
+                    if n==low and high==2:
+                        direct += [[row-1,col,1-n]]
+                    elif n==high and low==2:
+                        direct += [[row+1,col,1-n]]
+        return [direct,indirect]
+                        
+
+
+
+
     def __str__(self):
         out = ""
         for row in self.tabl:
@@ -151,6 +187,12 @@ class Takuzu(Problem):
     def actions(self, state: TakuzuState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
+        all_action=state.board.get_empty_pos_with_certain_value()
+        if all_action[0]==[]:
+            return all_action[1]
+        else:
+            return [0, all_action[0]]
+        
         # TODO
         pass
 
