@@ -2,26 +2,15 @@ Este ficheiro serve para anotar coisas sobre o projeto.
 Poderão ser ToDo's ou coisas a melhorar caso haja falhas no tempo/espaço
 ========================================================================
 
-Casos diretos
 
-_ 0 _ _ 1 0 1 1
-Nesta linha só falta 1 1, que tem de impedir que haja 3 0's consecutivos, logo tem de ficar à esquerda do 0 sozinho
-0 0 1 0 1 0 1 1
+Nas acoes indiretas escolher uma que falhe mais rápido (está nos slides)
+Por exemplo:
 
-_ _ 1 0 0 1 _ 0
-O mesmo do de cima, só falta 1 0 e tem de impedir que haja 3 1's seguidos. Tem ficar numa das duas primeiras casas,
-por isso a última casa tem de ser um 1
-_ _ 1 0 0 1 1 0
+Pos:	0	1	2	3	4	5	6
 
-Mas será que vale mais a pena explorar estas hipoteses de maneira "burra" ou ter um pequeno algoritmo que demora algum
-tempo, mas que preenche logo algumas posicoes
+	_	_	_	_	_	0	1
 
 
-Takuzu - função actions
-Será que é boa ideia:
-Devolver [1,[...]], quando o que está em [...] são acoes diretas 
-Devolver [0,[...]], quando [...] não sao acoes diretas
-Ação Direta: Quando sabemos que uma casa vazia tem de ser 0 ou 1
-
-
-contar n de quadrados preenchidos
+Se escolhermos a posicao 0,1,2,3 vai demorar mais tempo até encontrarmos uma contradição
+Se escolhermos 0 no 4, o 3 será 1 obrigatoriamente (temos mais posicoes que conseguimos preencher, logo vamos conseguir 
+concluir mais rapidamente que a escolha foi errada, nesses casos) 
