@@ -1,0 +1,5 @@
+1. Adicionar rows e cols ao TakuzuState
+2. Perguntar se podemos fazer coisas como sefl.board.size, ou se é melhor criar uma funcao getSize() no Board
+3. Quando fizermos (1) adicionar atributo conflict que será True se houver linhas/colunas repetidas. Este atributo sera 
+sempre verificado no inicio da funcao actions
+4. Decidir se usamos unique do utils.py ou np.unique

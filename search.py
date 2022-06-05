@@ -84,6 +84,8 @@ class Node:
         self.depth = 0
         if parent:
             self.depth = parent.depth + 1
+        #print("==========")
+        #print(state.board)
 
     def __repr__(self):
         return "<Node {}>".format(self.state)
