@@ -3,3 +3,4 @@
 3. Quando fizermos (1) adicionar atributo conflict que será True se houver linhas/colunas repetidas. Este atributo sera 
 sempre verificado no inicio da funcao actions
 4. Decidir se usamos unique do utils.py ou np.unique
+5. Colocar a cena das linhas/colunas nos conflitos

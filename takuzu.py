@@ -18,9 +18,6 @@ from search import (
     recursive_best_first_search,
 )
 
-from utils import (
-    unique
-)
 
 class Board:
     """Representação interna de um tabuleiro de Takuzu."""
@@ -38,6 +35,15 @@ class Board:
         Coloca um valor numa posicao do tabuleiro
         """
         self.tabl[row][col] = num
+
+    def check_if_row_filled(self, row):
+        boardRow = self.tabl[row]
+        return np.bincount(boardRow)[2] == 0
+
+
+    def check_if_col_filled(self, col):
+        boardCol = self.tabl[:,col]
+        return np.bincount(boardCol)[2] == 0
 
     def adjacent_vertical_numbers(self, row: int, col: int):
         """Devolve os valores imediatamente abaixo e acima,
@@ -178,12 +184,14 @@ class Board:
 
 class TakuzuState:
     state_id = 0
-
+    intConst = 224
     def __init__(self, board: Board, n_filled = -1):#, rows = -1, cols = -1):
         self.board = board
         self.n_filled = n_filled if n_filled!=-1 else board.countOccupiedPos()
         self.id = TakuzuState.state_id
         self.conflicts = False
+        self.rows = []
+        self.cols = []
         TakuzuState.state_id += 1
 
     def __lt__(self, other):
@@ -197,6 +205,18 @@ class TakuzuState:
         newState = TakuzuState(newBoard, self.n_filled)
         return newState
 
+    def rowcol_to_number(self, rc):
+        size = self.board.size
+        list_bin_intervals = []
+        i = 0
+        while (size > TakuzuState.intConst):
+            list_bin_intervals += [(i+1)*TakuzuState.intConst]
+            size -= TakuzuState.intConst
+        list_bin_intervals += [size+list_bin_intervals[-1]]
+        #[224,448,500]
+
+
+
     def addNumber(self, row, col, value):
         """
         Adiciona o valor "value" na posicao row,col (linha,coluna) e atualiza o estado
@@ -204,6 +224,11 @@ class TakuzuState:
         self.n_filled += 1
         self.board.put_number(row, col, value)
         self.conflicts = self.board.invalidNumberOfOnesZeros(row,col,value)
+        if (self.board.check_if_row_filled(row)):
+            rowNumber = self.rowcol_to_number(row)
+        if (self.board.check_if_col_filled(col)):
+            colNumber = self.rowcol_to_number(col)
+
 
 
 class Takuzu(Problem):
