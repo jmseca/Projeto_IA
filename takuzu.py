@@ -22,44 +22,6 @@ from utils import (
     unique
 )
 
-
-class TakuzuState:
-    state_id = 0
-
-    def __init__(self, board, n_filled = -1):#, rows = -1, cols = -1):
-        self.board = board
-        self.n_filled = n_filled if n_filled!=-1 else board.countOccupiedPos()
-        self.id = TakuzuState.state_id
-        self.conflicts = False
-        TakuzuState.state_id += 1
-
-    def __lt__(self, other):
-        return self.id < other.id
-
-    def filled(self):
-        return self.n_filled==(self.board.size)*(self.board.size)
-
-    def duplicate(self):
-        newBoard = Board(self.board.size, np.copy(self.board.tabl))
-        newState = TakuzuState(newBoard, self.n_filled)
-        return newState
-
-    def addNumber(self, row, col, value):
-        """
-        Adiciona o valor "value" na posicao row,col (linha,coluna) e atualiza o estado
-        """
-        self.n_filled += 1
-        self.board.put_number(row, col, value)
-        self.conflicts = self.board.invalidNumberOfOnesZeros(row,col,value)
-        if (self.conflicts):
-            print("row",row,"col",col)
-            print(self.board)
-            print("====================")
-
-
-
-    # TODO: outros metodos da classe
-
 class Board:
     """Representação interna de um tabuleiro de Takuzu."""
 
@@ -67,7 +29,7 @@ class Board:
         self.size = size
         self.tabl = tabl
 
-    def get_number(self, row: int, col: int) -> int:
+    def get_number(self, row: int, col: int) -> (int):
         """Devolve o valor na respetiva posição do tabuleiro."""
         return self.tabl[row][col]
 
@@ -77,14 +39,14 @@ class Board:
         """
         self.tabl[row][col] = num
 
-    def adjacent_vertical_numbers(self, row: int, col: int) -> (int, int):
+    def adjacent_vertical_numbers(self, row: int, col: int):
         """Devolve os valores imediatamente abaixo e acima,
         respectivamente."""
         low = None if (self.size == (row+1)) else self.get_number(row+1, col)
         high = None if (row == 0) else self.get_number(row-1, col)
         return (low,high)
 
-    def adjacent_horizontal_numbers(self, row: int, col: int) -> (int, int):
+    def adjacent_horizontal_numbers(self, row: int, col: int):
         """Devolve os valores imediatamente à esquerda e à direita,
         respectivamente."""
         right = None if (self.size == (col+1)) else self.get_number(row, col+1)
@@ -212,9 +174,36 @@ class Board:
         board = Board(size,tabl)
         return board
 
-        
+    
 
-    # TODO: outros metodos da classe
+class TakuzuState:
+    state_id = 0
+
+    def __init__(self, board: Board, n_filled = -1):#, rows = -1, cols = -1):
+        self.board = board
+        self.n_filled = n_filled if n_filled!=-1 else board.countOccupiedPos()
+        self.id = TakuzuState.state_id
+        self.conflicts = False
+        TakuzuState.state_id += 1
+
+    def __lt__(self, other):
+        return self.id < other.id
+
+    def filled(self):
+        return self.n_filled==(self.board.size)*(self.board.size)
+
+    def duplicate(self):
+        newBoard = Board(self.board.size, np.copy(self.board.tabl))
+        newState = TakuzuState(newBoard, self.n_filled)
+        return newState
+
+    def addNumber(self, row, col, value):
+        """
+        Adiciona o valor "value" na posicao row,col (linha,coluna) e atualiza o estado
+        """
+        self.n_filled += 1
+        self.board.put_number(row, col, value)
+        self.conflicts = self.board.invalidNumberOfOnesZeros(row,col,value)
 
 
 class Takuzu(Problem):
@@ -226,8 +215,6 @@ class Takuzu(Problem):
     def actions(self, state: TakuzuState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
-        if (state.board.tabl[0,1]==0):
-            print("Existee")
         if state.conflicts:
             return []
         all_action=state.board.get_direct_indirect_pos()
@@ -247,13 +234,9 @@ class Takuzu(Problem):
         if type == 0:                       #direct action
             for directAction in action[1]:
                 row, col, num = directAction
-                if (row == 0 and col == 1):
-                    print("direct")
                 newState.addNumber(row, col, num)
         else:                               #indirect action
             row, col, num = action[1:]
-            if (row == 0 and col == 1):
-                    print("indirect",num)
             newState.addNumber(row, col, num)
         return newState
 
@@ -278,7 +261,10 @@ if __name__ == "__main__":
     
     
     finalState = depth_first_tree_search(TakuzuProblem)
-    print(finalState.state.board)
+    try:
+        print(finalState.state.board)
+    except:
+        exit(2)
     
     # Ler o ficheiro de input de sys.argv[1],
     # Usar uma técnica de procura para resolver a instância,
