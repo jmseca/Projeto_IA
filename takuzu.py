@@ -6,6 +6,7 @@
 # 95749 Joao Fonseca
 # 95764 Wanghao Zhu
 
+from re import A
 import sys
 import numpy as np
 from search import (
@@ -212,10 +213,16 @@ class TakuzuState:
         while (size > TakuzuState.intConst):
             list_bin_intervals += [(i+1)*TakuzuState.intConst]
             size -= TakuzuState.intConst
+            i+=1
         list_bin_intervals += [size+list_bin_intervals[-1]]
-        #[224,448,500]
-
-
+        size_bin_intervals = i+1
+        rc_number = []
+        for n in range(size_bin_intervals):
+            init = 0 if n==0 else list_bin_intervals[n-1]
+            interval = rc[init:list_bin_intervals[n]]
+            interval_number = int("".join(str(i) for i in interval),2)
+            rc_number += [interval_number]
+        return rc_number
 
     def addNumber(self, row, col, value):
         """
@@ -223,11 +230,37 @@ class TakuzuState:
         """
         self.n_filled += 1
         self.board.put_number(row, col, value)
-        self.conflicts = self.board.invalidNumberOfOnesZeros(row,col,value)
+
+    def check_valid_new_rowcol(self,row,col):
         if (self.board.check_if_row_filled(row)):
-            rowNumber = self.rowcol_to_number(row)
+            new_row = self.rowcol_to_number(row)
+            if new_row not in self.rows:
+                self.rows += [new_row]
+            else: 
+                self.conflicts = True
         if (self.board.check_if_col_filled(col)):
-            colNumber = self.rowcol_to_number(col)
+            new_col = self.rowcol_to_number(col)
+            if new_col not in self.rows:
+                self.cols += [new_col]
+            else: 
+                self.conflicts = True
+
+    #def check_valid_adjacent(self,row,col,value):
+    #    adjVer = self.board.adjacent_vertical_numbers(row, col)
+    #    adjHor = self.board.adjacent_horizontal_numbers(row, col)       #center
+    #    self.conflicts = (adjVer[0]==value and adjVer[1]==value) or (adjHor[0]==value and adjHor[1]==value)
+
+
+    def check_for_conflicts(self,row,col,value):
+        self.conflicts = self.board.invalidNumberOfOnesZeros(row,col,value)
+        if not(self.conflicts):
+            self.check_valid_new_rowcol(row,col)
+        #if not(self.conflicts):
+        #    self.check_valid_adjacent(row,col,value)  
+            
+
+
+
 
 
 
@@ -258,6 +291,8 @@ class Takuzu(Problem):
         newState = state.duplicate()
         if type == 0:                       #direct action
             for directAction in action[1]:
+                if newState.conflicts:
+                    break
                 row, col, num = directAction
                 newState.addNumber(row, col, num)
         else:                               #indirect action
