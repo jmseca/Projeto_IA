@@ -31,6 +31,12 @@ class Board:
         """Devolve o valor na respetiva posição do tabuleiro."""
         return self.tabl[row][col]
 
+    def get_row(self, row: int):
+        return self.tabl[row]
+
+    def get_col(self, col: int):
+        return self.tabl[:,col]
+
     def put_number(self, row, col, num):
         """
         Coloca um valor numa posicao do tabuleiro
@@ -39,12 +45,13 @@ class Board:
 
     def check_if_row_filled(self, row):
         boardRow = self.tabl[row]
-        return np.bincount(boardRow)[2] == 0
+        return len(np.bincount(boardRow)) == 2
+
 
 
     def check_if_col_filled(self, col):
         boardCol = self.tabl[:,col]
-        return np.bincount(boardCol)[2] == 0
+        return len(np.bincount(boardCol)) == 2
 
     def adjacent_vertical_numbers(self, row: int, col: int):
         """Devolve os valores imediatamente abaixo e acima,
@@ -185,7 +192,7 @@ class Board:
 
 class TakuzuState:
     state_id = 0
-    intConst = 224
+    intConst = 180
     def __init__(self, board: Board, n_filled = -1):#, rows = -1, cols = -1):
         self.board = board
         self.n_filled = n_filled if n_filled!=-1 else board.countOccupiedPos()
@@ -214,7 +221,8 @@ class TakuzuState:
             list_bin_intervals += [(i+1)*TakuzuState.intConst]
             size -= TakuzuState.intConst
             i+=1
-        list_bin_intervals += [size+list_bin_intervals[-1]]
+        offset = 0 if i==0 else list_bin_intervals[-1]
+        list_bin_intervals += [size+offset]
         size_bin_intervals = i+1
         rc_number = []
         for n in range(size_bin_intervals):
@@ -230,16 +238,17 @@ class TakuzuState:
         """
         self.n_filled += 1
         self.board.put_number(row, col, value)
+        self.check_for_conflicts(row,col,value)
 
     def check_valid_new_rowcol(self,row,col):
         if (self.board.check_if_row_filled(row)):
-            new_row = self.rowcol_to_number(row)
+            new_row = self.rowcol_to_number(self.board.get_row(row))
             if new_row not in self.rows:
                 self.rows += [new_row]
             else: 
                 self.conflicts = True
         if (self.board.check_if_col_filled(col)):
-            new_col = self.rowcol_to_number(col)
+            new_col = self.rowcol_to_number(self.board.get_col(col))
             if new_col not in self.rows:
                 self.cols += [new_col]
             else: 
