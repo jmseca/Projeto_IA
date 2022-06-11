@@ -5,3 +5,5 @@ sempre verificado no inicio da funcao actions
 4. Decidir se usamos unique do utils.py ou np.unique
 5. Colocar a cena das linhas/colunas nos conflitos
 6. Assumimos que não temos falhas de adjacencia. Se o programa estiver a falhar verificar se é isto
+7. Pensar se faz sentido continuar a a escolher a primeira jogada indireta, ou se fazemos como nos slide e escolhermos
+a mais provavel de falhar

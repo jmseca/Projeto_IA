@@ -6,7 +6,6 @@
 # 95749 Joao Fonseca
 # 95764 Wanghao Zhu
 
-from re import A
 import sys
 import numpy as np
 from search import (
@@ -266,7 +265,9 @@ class TakuzuState:
             self.check_valid_new_rowcol(row,col)
         #if not(self.conflicts):
         #    self.check_valid_adjacent(row,col,value)  
-            
+
+    def num_count_row_col(self,row,col,num):
+        return np.bincount(self.board.get_col(col))[num] + np.bincount(self.board.get_row(row))[num]            
 
 
 
@@ -318,7 +319,13 @@ class Takuzu(Problem):
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
-        pass
+        action = node.action
+        if action==None or action[0] == 0:      #direct action
+            return 0
+        else:
+            row, col, num = action[1:]
+            return node.state.num_count_row_col(row,col,1-num) - node.state.num_count_row_col(row,col,num) 
+        
 
     # TODO: outros metodos da classe
 
@@ -327,12 +334,19 @@ if __name__ == "__main__":
     startBoard = Board.parse_instance_from_stdin()
     TakuzuProblem = Takuzu(startBoard)
 
+    #astar_search,
+    #breadth_first_tree_search,
+    #depth_first_tree_search,
+    #greedy_search,
+    #recursive_best_first_search
     
-    
+    #finalState = breadth_first_tree_search(TakuzuProblem)
     finalState = depth_first_tree_search(TakuzuProblem)
+    #finalState = greedy_search(TakuzuProblem)
     try:
         print(finalState.state.board)
     except:
+        print("No Solution :(")
         exit(2)
     
     # Ler o ficheiro de input de sys.argv[1],
