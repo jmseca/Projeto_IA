@@ -124,6 +124,8 @@ class Board:
         limit = np.ceil(self.size/2) #6 -> 3, 7 -> 4
         rowCount = np.bincount(self.tabl[row])[value]
         colCount = np.bincount(self.tabl[:,col])[value]
+        #if (rowCount>limit or colCount>limit):
+        #    print("ilegal 1s and 0s")
         return rowCount>limit or colCount>limit
 
 
@@ -158,7 +160,10 @@ class Board:
                         direct += [[row-1,col,1-n]]
                     elif n==high and low==2:
                         direct += [[row+1,col,1-n]]
-        return [list(np.unique(direct,axis=0)),indirect]
+        if direct==[]:
+            return [direct,indirect]
+        else:
+            return [list(np.unique(direct,axis=0)),indirect]
                         
     def __str__(self):
         out = ""
@@ -245,12 +250,14 @@ class TakuzuState:
             if new_row not in self.rows:
                 self.rows += [new_row]
             else: 
+                #print("duplicate row")
                 self.conflicts = True
         if (self.board.check_if_col_filled(col)):
             new_col = self.rowcol_to_number(self.board.get_col(col))
-            if new_col not in self.rows:
+            if new_col not in self.cols:
                 self.cols += [new_col]
             else: 
+                #print("duplicate col")
                 self.conflicts = True
 
     #def check_valid_adjacent(self,row,col,value):
@@ -283,12 +290,18 @@ class Takuzu(Problem):
     def actions(self, state: TakuzuState):
         """Retorna uma lista de ações que podem ser executadas a
         partir do estado passado como argumento."""
+        #print("=====================")
+        #print(state.board)
         if state.conflicts:
             return []
         all_action=state.board.get_direct_indirect_pos()
         if all_action[0]==[]:
+            #print("Indirect")
+            #print(all_action[1])
             return all_action[1]
         else:
+            #print("Direct")
+            #print(all_action[0])
             return [[0, all_action[0]]]
 
 
