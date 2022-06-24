@@ -31,24 +31,24 @@ class Board:
         return self.tabl[row][col]
 
     def get_row(self, row: int):
+        """Devolve todos os valores da linha 'row' do tabuleiro."""
         return self.tabl[row]
 
     def get_col(self, col: int):
+        """Devolve todos os valores da coluna 'col' do tabuleiro."""
         return self.tabl[:,col]
 
     def put_number(self, row, col, num):
-        """
-        Coloca um valor numa posicao do tabuleiro
-        """
+        """Coloca um valor numa posicao do tabuleiro"""
         self.tabl[row][col] = num
 
     def check_if_row_filled(self, row):
+        """Verifica se a linha 'row' está totalmente preenchida."""
         boardRow = self.tabl[row]
         return len(np.bincount(boardRow)) == 2
 
-
-
     def check_if_col_filled(self, col):
+        """Verifica se a coluna 'col' está totalmente preenchida."""
         boardCol = self.tabl[:,col]
         return len(np.bincount(boardCol)) == 2
 
@@ -96,15 +96,15 @@ class Board:
         Devolve True se o tabuleiro respeita a regra, False caso contrario
         """
         accept = True
-        limit = (self.size -1) 
-        i=1
+        limit = (self.size) 
+        i=0
         while (accept and i<limit):
-            n=1
+            n=0
             while (accept and n<limit):
                 elem = self.get_number(i, n)
                 hori = self.adjacent_horizontal_numbers(i,n)
                 vert = self.adjacent_vertical_numbers(i,n)
-                accept = ((hori[0]!=hori[1] or hori[0]!=elem) or (vert[0]!=vert[1] or vert[0]!=elem))
+                accept = ((hori[0]!=hori[1] or hori[0]!=elem) and (vert[0]!=vert[1] or vert[0]!=elem))
                 n+=1
             i+=1
         return accept
@@ -175,6 +175,7 @@ class Board:
 
 
     def countOccupiedPos(self):
+        """Devolve o números de posições já preenchidas no tabuleiro."""
         return np.count_nonzero(self.tabl != 2)
 
     @staticmethod
@@ -197,7 +198,8 @@ class Board:
 class TakuzuState:
     state_id = 0
     intConst = 180
-    def __init__(self, board: Board, n_filled = -1):#, rows = -1, cols = -1):
+    def __init__(self, board: Board, n_filled = -1):
+        #, rows = -1, cols = -1):
         self.board = board
         self.n_filled = n_filled if n_filled!=-1 else board.countOccupiedPos()
         self.id = TakuzuState.state_id
@@ -210,14 +212,17 @@ class TakuzuState:
         return self.id < other.id
 
     def filled(self):
+        """Verificar se tabuleiro está totalmente preenchido."""
         return self.n_filled==(self.board.size)*(self.board.size)
 
     def duplicate(self):
+        """Criar um novo TakuzuState."""
         newBoard = Board(self.board.size, np.copy(self.board.tabl))
         newState = TakuzuState(newBoard, self.n_filled)
         return newState
 
     def rowcol_to_number(self, rc):
+        """Transformar uma linha ou uma coluna numa lista mais pequena de números."""
         size = self.board.size
         list_bin_intervals = []
         i = 0
@@ -245,6 +250,7 @@ class TakuzuState:
         self.check_for_conflicts(row,col,value)
 
     def check_valid_new_rowcol(self,row,col):
+        """Verificar se existe linhas e colunas iguais a linha 'row' e coluna 'col' respetivamente."""
         if (self.board.check_if_row_filled(row)):
             new_row = self.rowcol_to_number(self.board.get_row(row))
             if new_row not in self.rows:
@@ -267,6 +273,7 @@ class TakuzuState:
 
 
     def check_for_conflicts(self,row,col,value):
+        """Verificar se a linha 'row' e coluna 'col' satisfazem as regras de Takuzu."""
         self.conflicts = self.board.invalidNumberOfOnesZeros(row,col,value)
         if not(self.conflicts):
             self.check_valid_new_rowcol(row,col)
@@ -274,6 +281,7 @@ class TakuzuState:
         #    self.check_valid_adjacent(row,col,value)  
 
     def num_count_row_col(self,row,col,num):
+        """Devolve a soma das quantidades de 'num' na linha 'row' e coluna 'col'."""
         return np.bincount(self.board.get_col(col))[num] + np.bincount(self.board.get_row(row))[num]            
 
 
@@ -346,16 +354,11 @@ class Takuzu(Problem):
 if __name__ == "__main__":
     startBoard = Board.parse_instance_from_stdin()
     TakuzuProblem = Takuzu(startBoard)
-
-    #astar_search,
-    #breadth_first_tree_search,
-    #depth_first_tree_search,
-    #greedy_search,
-    #recursive_best_first_search
     
     #finalState = breadth_first_tree_search(TakuzuProblem)
-    finalState = depth_first_tree_search(TakuzuProblem)
+    #finalState = depth_first_tree_search(TakuzuProblem)
     #finalState = greedy_search(TakuzuProblem)
+    finalState = astar_search(TakuzuProblem)
     try:
         print(finalState.state.board)
     except:
