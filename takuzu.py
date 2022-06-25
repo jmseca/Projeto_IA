@@ -135,31 +135,41 @@ class Board:
         cujo valor ainda não é sabido (b).
         a - [[row,col,val], ... ]
         b - [[1,row,col,val1], [1,row,col,val0]]
+        Deteta conflitos. Caso haja, devolve [[],[]]
         """
         direct,indirect=[],[]
+        added = [] #lista de pares [row,col] adicionados a direct
         done_indirect = False
         for row in range(self.size):
             for col in range(self.size):
+                to_add = []
                 n=self.get_number(row,col)
                 (left,right)=self.adjacent_horizontal_numbers(row,col)
                 (low,high)=self.adjacent_vertical_numbers(row,col)
                 if n==2:
                     if left==right and left!=2:
-                        direct += [[row,col,1-left]]
+                        to_add = [[row,col,1-left]]
                     elif low==high and low!=2:
-                        direct += [[row,col,1-low]]
+                        to_add = [[row,col,1-low]]
                     elif not(done_indirect):
                         indirect = [[1, row,col,0],[1, row,col,1]]
                         done_indirect = True
                 else:
                     if n==left and right==2:
-                        direct += [[row,col+1,1-n]]
+                        to_add = [[row,col+1,1-n]]
                     elif n==right and left==2:
-                        direct += [[row,col-1,1-n]]
+                        to_add = [[row,col-1,1-n]]
                     if n==low and high==2:
-                        direct += [[row-1,col,1-n]]
+                        to_add += [[row-1,col,1-n]]
                     elif n==high and low==2:
-                        direct += [[row+1,col,1-n]]
+                        to_add += [[row+1,col,1-n]]
+                for elem in to_add:
+                    if [elem[0],elem[1]] not in added:
+                        direct+=[elem]
+                        added += [[elem[0],elem[1]]]
+                    elif elem[2] != [rcn for rcn in direct if (rcn[0]==elem[0] and rcn[1]==elem[1])][0][2]:
+                        return [[],[]]
+
         if direct==[]:
             return [direct,indirect]
         else:
@@ -198,14 +208,15 @@ class Board:
 class TakuzuState:
     state_id = 0
     intConst = 180
-    def __init__(self, board: Board, n_filled = -1):
+    def __init__(self, board: Board, n_filled = -1, rows=[], cols = []):
         #, rows = -1, cols = -1):
         self.board = board
         self.n_filled = n_filled if n_filled!=-1 else board.countOccupiedPos()
         self.id = TakuzuState.state_id
         self.conflicts = False
-        self.rows = []
-        self.cols = []
+        self.rows = rows
+        self.cols = cols
+        self.last_change = None
         TakuzuState.state_id += 1
 
     def __lt__(self, other):
@@ -218,7 +229,7 @@ class TakuzuState:
     def duplicate(self):
         """Criar um novo TakuzuState."""
         newBoard = Board(self.board.size, np.copy(self.board.tabl))
-        newState = TakuzuState(newBoard, self.n_filled)
+        newState = TakuzuState(newBoard, self.n_filled, self.rows.copy(), self.cols.copy())
         return newState
 
     def rowcol_to_number(self, rc):
@@ -256,14 +267,12 @@ class TakuzuState:
             if new_row not in self.rows:
                 self.rows += [new_row]
             else: 
-                #print("duplicate row")
                 self.conflicts = True
         if (self.board.check_if_col_filled(col)):
             new_col = self.rowcol_to_number(self.board.get_col(col))
             if new_col not in self.cols:
                 self.cols += [new_col]
             else: 
-                #print("duplicate col")
                 self.conflicts = True
 
     #def check_valid_adjacent(self,row,col,value):
@@ -321,22 +330,26 @@ class Takuzu(Problem):
         type = action[0]
         newState = state.duplicate()
         if type == 0:                       #direct action
+            newState.last_change = []
             for directAction in action[1]:
                 if newState.conflicts:
                     break
                 row, col, num = directAction
                 newState.addNumber(row, col, num)
+                newState.last_change += [[row,col]]
         else:                               #indirect action
             row, col, num = action[1:]
             newState.addNumber(row, col, num)
+            newState.last_change = [row,col]
         return newState
 
     def goal_test(self, state: TakuzuState):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas com uma sequência de números adjacentes."""
-        return state.filled() and state.board.acceptable_zeros_ones_count()  and state.board.no_3_adjacent() \
-            and state.board.all_rows_diff() and state.board.all_cols_diff()
+        return state.filled() and not(state.conflicts) #sera que basta isto?
+        #return state.filled() and state.board.acceptable_zeros_ones_count() and state.board.no_3_adjacent() \
+            #and state.board.all_rows_diff() and state.board.all_cols_diff()
 
     def h(self, node: Node):
         """Função heuristica utilizada para a procura A*."""
@@ -358,7 +371,7 @@ if __name__ == "__main__":
     #finalState = breadth_first_tree_search(TakuzuProblem)
     #finalState = depth_first_tree_search(TakuzuProblem)
     #finalState = greedy_search(TakuzuProblem)
-    finalState = astar_search(TakuzuProblem)
+    finalState = depth_first_tree_search(TakuzuProblem)
     try:
         print(finalState.state.board)
     except:
