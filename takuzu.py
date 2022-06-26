@@ -6,6 +6,11 @@
 # 95749 Joao Fonseca
 # 95764 Wanghao Zhu
 
+####################################################
+# APAGAR ISTO DEPOIS
+import os
+####################################################
+
 import sys
 import numpy as np
 from search import (
@@ -16,6 +21,7 @@ from search import (
     depth_first_tree_search,
     greedy_search,
     recursive_best_first_search,
+    depth_limited_search
 )
 
 
@@ -124,8 +130,6 @@ class Board:
         limit = np.ceil(self.size/2) #6 -> 3, 7 -> 4
         rowCount = np.bincount(self.tabl[row])[value]
         colCount = np.bincount(self.tabl[:,col])[value]
-        #if (rowCount>limit or colCount>limit):
-        #    print("ilegal 1s and 0s")
         return rowCount>limit or colCount>limit
 
 
@@ -169,11 +173,7 @@ class Board:
                         added += [[elem[0],elem[1]]]
                     elif elem[2] != [rcn for rcn in direct if (rcn[0]==elem[0] and rcn[1]==elem[1])][0][2]:
                         return [[],[]]
-
-        if direct==[]:
-            return [direct,indirect]
-        else:
-            return [list(np.unique(direct,axis=0)),indirect]
+        return [direct,indirect]
                         
     def __str__(self):
         out = ""
@@ -193,7 +193,6 @@ class Board:
         """Lê o test do standard input (stdin) que é passado como argumento
         e retorna uma instância da classe Board.
         """
-        readInput = True
         size = int(sys.stdin.readline())
         tabl = np.zeros(shape=(size,size), dtype=np.ubyte)
         for i in range(size):
@@ -202,6 +201,31 @@ class Board:
             tabl[i] = np.asarray(newLineEl)
         board = Board(size,tabl)
         return board
+
+    @staticmethod
+    def parse_instances_from_dir(dir):
+        """
+        Lê todos os testes de uma pasta do sistema operativo.
+        Retorna uma lista com ok
+        """
+        boards = []
+        files = []
+        for file in os.listdir(dir):
+            try:
+                if  file[:6]!='output' and file!='input_T01' and (file[:5]=='input' or file.split('.')[1]=="in"):
+                    file_open = open(dir+file,'r')
+                    size = int(file_open.readline())
+                    tabl = np.zeros(shape=(size,size), dtype=np.ubyte)
+                    for i in range(size):
+                        newLine = file_open.readline()
+                        newLineEl = newLine.split('\t')
+                        tabl[i] = np.asarray(newLineEl)
+                    boards += [Board(size,tabl)]
+                    files += [file]
+            except:
+                print(file)
+        return boards,files
+
 
     
 
@@ -216,7 +240,6 @@ class TakuzuState:
         self.conflicts = False
         self.rows = rows
         self.cols = cols
-        self.last_change = None
         TakuzuState.state_id += 1
 
     def __lt__(self, other):
@@ -275,24 +298,26 @@ class TakuzuState:
             else: 
                 self.conflicts = True
 
-    #def check_valid_adjacent(self,row,col,value):
-    #    adjVer = self.board.adjacent_vertical_numbers(row, col)
-    #    adjHor = self.board.adjacent_horizontal_numbers(row, col)       #center
-    #    self.conflicts = (adjVer[0]==value and adjVer[1]==value) or (adjHor[0]==value and adjHor[1]==value)
-
-
     def check_for_conflicts(self,row,col,value):
         """Verificar se a linha 'row' e coluna 'col' satisfazem as regras de Takuzu."""
         self.conflicts = self.board.invalidNumberOfOnesZeros(row,col,value)
         if not(self.conflicts):
             self.check_valid_new_rowcol(row,col)
-        #if not(self.conflicts):
-        #    self.check_valid_adjacent(row,col,value)  
 
     def num_count_row_col(self,row,col,num):
         """Devolve a soma das quantidades de 'num' na linha 'row' e coluna 'col'."""
-        return np.bincount(self.board.get_col(col))[num] + np.bincount(self.board.get_row(row))[num]            
+        return np.bincount(self.board.get_col(col))[num] + np.bincount(self.board.get_row(row))[num] 
 
+    def num_adjacent_diff(self,row,col,num):
+        zeros_ones = [0,0]
+        pre_positions = [[row-1,col],[row+1,col],[row,col-1],[row,col+1]]
+        positions = list(filter(lambda x:
+        x[0]>=0 and x[1]>=0 and x[0]<self.board.size and x[1]<self.board.size,pre_positions))
+        for pos in positions:
+            pos_num = self.board.get_number(pos[0],pos[1])
+            if pos_num is not None and pos_num!=2:
+                zeros_ones[pos_num]+=1
+        return zeros_ones[(1-num)]-zeros_ones[num]
 
 
 
@@ -330,17 +355,14 @@ class Takuzu(Problem):
         type = action[0]
         newState = state.duplicate()
         if type == 0:                       #direct action
-            newState.last_change = []
             for directAction in action[1]:
                 if newState.conflicts:
                     break
                 row, col, num = directAction
                 newState.addNumber(row, col, num)
-                newState.last_change += [[row,col]]
         else:                               #indirect action
             row, col, num = action[1:]
             newState.addNumber(row, col, num)
-            newState.last_change = [row,col]
         return newState
 
     def goal_test(self, state: TakuzuState):
@@ -358,7 +380,13 @@ class Takuzu(Problem):
             return 0
         else:
             row, col, num = action[1:]
-            return node.state.num_count_row_col(row,col,1-num) - node.state.num_count_row_col(row,col,num) 
+            return  node.state.num_count_row_col(row,col,num) - node.state.num_count_row_col(row,col,1-num)\
+            #adjacent_diff = node.state.num_adjacent_diff(row,col,num)
+            #return adjacent_diff if adjacent_diff!=0 else num
+                #- node.state.n_filled # - len(node.state.cols) - len(node.state.rows)
+
+    def path_cost(self, cost_so_far, A, action, B):
+        return  - B.n_filled  #+1#- (B.n_filled)
         
 
     # TODO: outros metodos da classe
@@ -369,9 +397,9 @@ if __name__ == "__main__":
     TakuzuProblem = Takuzu(startBoard)
     
     #finalState = breadth_first_tree_search(TakuzuProblem)
-    #finalState = depth_first_tree_search(TakuzuProblem)
     #finalState = greedy_search(TakuzuProblem)
     finalState = depth_first_tree_search(TakuzuProblem)
+    #finalState = astar_search(TakuzuProblem)
     try:
         print(finalState.state.board)
     except:

@@ -1556,20 +1556,34 @@ class InstrumentedProblem(Problem):
                                                self.states, str(self.found)[:4])
 
 
-def compare_searchers(problems, header,
+def compare_searchers(problems, #header,
                       searchers=[breadth_first_tree_search,
-                                 breadth_first_graph_search,
+                                 astar_search,
                                  depth_first_graph_search,
-                                 iterative_deepening_search,
-                                 depth_limited_search,
-                                 recursive_best_first_search]):
+                                 greedy_search]):
     def do(searcher, problem):
         p = InstrumentedProblem(problem)
         searcher(p)
         return p
 
-    table = [[name(s)] + [do(s, p) for p in problems] for s in searchers]
+    #table = [[name(s)] + [do(s, p) for p in problems] for s in searchers]
+    #print_table(table, header)
+    return [[do(s, p) for s in searchers] for p in problems]
+
+
+def compare_searchers2(problems, header,
+                      searchers=[breadth_first_tree_search,
+                                 astar_search,
+                                 depth_first_graph_search,
+                                 greedy_search]):
+    def do2(searcher, problem):
+        p = InstrumentedProblem(problem)
+        searcher(p)
+        return p
+
+    table = [[name(s)] + [do2(s, p) for p in problems] for s in searchers]
     print_table(table, header)
+    #return [[do(s, p) for s in searchers] for p in problems]
 
 
 def compare_graph_searchers():
