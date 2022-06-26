@@ -9,9 +9,9 @@ if __name__ == "__main__":
     startBoards,files = Board.parse_instances_from_dir("/home/jmseca/IST/IA/Projeto/Projeto_IA/testes-takuzu/")
     problems = list(map(Takuzu,startBoards))
     searchers=[breadth_first_tree_search, astar_search, depth_first_graph_search, greedy_search]
-    compare_searchers2(problems[:6],[file for file in files][:6])
+    compare_searchers2(problems[:6],["algo"]+[file for file in files][:6])
     print("====================")
-    compare_searchers2(problems[6:],[file for file in files][6:])
+    compare_searchers2(problems[6:],["algo"]+[file for file in files][6:])
     """
     searchers_str = ["BFTS","A*","DFTS","Greedy"]
     try:

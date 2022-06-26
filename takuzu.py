@@ -14,6 +14,7 @@ import os
 import sys
 import numpy as np
 from search import (
+    InstrumentedProblem,
     Problem,
     Node,
     astar_search,
@@ -156,7 +157,9 @@ class Board:
                     elif low==high and low!=2:
                         to_add = [[row,col,1-low]]
                     elif not(done_indirect):
+                    #else:
                         indirect = [[1, row,col,0],[1, row,col,1]]
+                        #indirect += [[row,col]]
                         done_indirect = True
                 else:
                     if n==left and right==2:
@@ -173,6 +176,12 @@ class Board:
                         added += [[elem[0],elem[1]]]
                     elif elem[2] != [rcn for rcn in direct if (rcn[0]==elem[0] and rcn[1]==elem[1])][0][2]:
                         return [[],[]]
+        #if indirect!=[]:
+        #    indirect = [[[1,rc[0],rc[1],0],[1,rc[0],rc[1],1]] for rc in indirect if 
+        #        self.num_filled_rc_pos(rc[0],rc[1])==max(list(map(
+        #        lambda x : self.num_filled_rc_pos(x[0],x[1]),indirect))
+        #    )][0]
+        #print(indirect,"ind")
         return [direct,indirect]
                         
     def __str__(self):
@@ -187,6 +196,31 @@ class Board:
     def countOccupiedPos(self):
         """Devolve o números de posições já preenchidas no tabuleiro."""
         return np.count_nonzero(self.tabl != 2)
+
+    def num_adjacent_diff(self,row,col,num):
+        zeros_ones = [0,0]
+        pre_positions = [[row-1,col],[row+1,col],[row,col-1],[row,col+1]]
+        positions = list(filter(lambda x:
+        x[0]>=0 and x[1]>=0 and x[0]<self.size and x[1]<self.size,pre_positions))
+        for pos in positions:
+            pos_num = self.get_number(pos[0],pos[1])
+            if pos_num is not None and pos_num!=2:
+                zeros_ones[pos_num]+=1
+        return zeros_ones[(1-num)]-zeros_ones[num]
+    
+    def num_empty_rc_pos(self,row,col):
+        col_bincount = np.bincount(self.get_col(col))
+        row_bincount = np.bincount(self.get_row(row))
+        col_count = 0 if len(col_bincount)==2 else col_bincount[2]
+        row_count = 0 if len(row_bincount)==2 else row_bincount[2]
+        return col_count + row_count
+
+    def num_filled_rc_pos(self,row,col):
+        col_bincount = np.bincount(self.get_col(col))
+        row_bincount = np.bincount(self.get_row(row))
+        col_count = col_bincount[0]+col_bincount[1]
+        row_count = row_bincount[0]+row_bincount[1]
+        return col_count + row_count
 
     @staticmethod
     def parse_instance_from_stdin():
@@ -340,6 +374,7 @@ class Takuzu(Problem):
         if all_action[0]==[]:
             #print("Indirect")
             #print(all_action[1])
+            #print("all_action =",all_action)
             return all_action[1]
         else:
             #print("Direct")
@@ -353,6 +388,7 @@ class Takuzu(Problem):
         das presentes na lista obtida pela execução de
         self.actions(state)."""
         type = action[0]
+        #print("action",action)
         newState = state.duplicate()
         if type == 0:                       #direct action
             for directAction in action[1]:
@@ -361,6 +397,7 @@ class Takuzu(Problem):
                 row, col, num = directAction
                 newState.addNumber(row, col, num)
         else:                               #indirect action
+            #print(action[1:])
             row, col, num = action[1:]
             newState.addNumber(row, col, num)
         return newState
@@ -395,16 +432,18 @@ class Takuzu(Problem):
 if __name__ == "__main__":
     startBoard = Board.parse_instance_from_stdin()
     TakuzuProblem = Takuzu(startBoard)
-    
+    intru = InstrumentedProblem(TakuzuProblem)
     #finalState = breadth_first_tree_search(TakuzuProblem)
     #finalState = greedy_search(TakuzuProblem)
-    finalState = depth_first_tree_search(TakuzuProblem)
+    #finalState = depth_first_tree_search(InstrumentedProblem(TakuzuProblem))
     #finalState = astar_search(TakuzuProblem)
-    try:
-        print(finalState.state.board)
-    except:
-        print("No Solution :(")
-        exit(2)
+    astar_search(intru)
+    #try:
+    #print(intru.problem.state.board)
+    print(intru)
+    #except:
+    #    print("No Solution :(")
+    #    exit(2)
     
     # Ler o ficheiro de input de sys.argv[1],
     # Usar uma técnica de procura para resolver a instância,
