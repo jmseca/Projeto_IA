@@ -6,6 +6,7 @@
 # 95749 Joao Fonseca
 # 95764 Wanghao Zhu
 
+
 import sys
 import numpy as np
 from search import (
@@ -15,7 +16,7 @@ from search import (
     breadth_first_tree_search,
     depth_first_tree_search,
     greedy_search,
-    recursive_best_first_search,
+    recursive_best_first_search
 )
 
 
@@ -25,6 +26,7 @@ class Board:
     def __init__(self, size, tabl):
         self.size = size
         self.tabl = tabl
+
 
     def get_number(self, row: int, col: int) -> (int):
         """Devolve o valor na respetiva posição do tabuleiro."""
@@ -66,6 +68,7 @@ class Board:
         left = None if (col == 0) else self.get_number(row, col-1)
         return (left,right)
 
+
     def invalidNumberOfOnesZeros(self, row, col, value):
         """
         Verifica numa linha e numa coluna se o número "value" excedeu a quantidade limite 
@@ -73,10 +76,39 @@ class Board:
         limit = np.ceil(self.size/2) #6 -> 3, 7 -> 4
         rowCount = np.bincount(self.tabl[row])[value]
         colCount = np.bincount(self.tabl[:,col])[value]
-        #if (rowCount>limit or colCount>limit):
-        #    print("ilegal 1s and 0s")
         return rowCount>limit or colCount>limit
 
+
+
+    def wanghao(self,row,col,direct,indirect,added,done_indirect):
+        to_add=[]
+        n=self.get_number(row,col)
+        (left,right)=self.adjacent_horizontal_numbers(row,col)
+        (low,high)=self.adjacent_vertical_numbers(row,col)
+        if n==2:
+            if left==right and left!=2:
+                to_add = [[row,col,1-left]]
+            elif low==high and low!=2:
+                to_add = [[row,col,1-low]]
+            elif not(done_indirect):
+                indirect = [[1, row,col,0],[1, row,col,1]]
+                done_indirect = True
+        else:
+            if n==left and right==2:
+                to_add = [[row,col+1,1-n]]
+            elif n==right and left==2:
+                to_add = [[row,col-1,1-n]]
+            if n==low and high==2:
+                to_add += [[row-1,col,1-n]]
+            elif n==high and low==2:
+                to_add += [[row+1,col,1-n]]
+        for elem in to_add:
+            if [elem[0],elem[1]] not in added:
+                direct+=[elem]
+                added += [[elem[0],elem[1]]]
+            elif elem[2] != [rcn for rcn in direct if (rcn[0]==elem[0] and rcn[1]==elem[1])][0][2]:
+                return [],[],[],-1
+        return direct,indirect,added,done_indirect
 
     def get_direct_indirect_pos(self):
         """
@@ -91,33 +123,9 @@ class Board:
         done_indirect = False
         for row in range(self.size):
             for col in range(self.size):
-                to_add = []
-                n=self.get_number(row,col)
-                (left,right)=self.adjacent_horizontal_numbers(row,col)
-                (low,high)=self.adjacent_vertical_numbers(row,col)
-                if n==2:
-                    if left==right and left!=2:
-                        to_add = [[row,col,1-left]]
-                    elif low==high and low!=2:
-                        to_add = [[row,col,1-low]]
-                    elif not(done_indirect):
-                        indirect = [[1, row,col,0],[1, row,col,1]]
-                        done_indirect = True
-                else:
-                    if n==left and right==2:
-                        to_add = [[row,col+1,1-n]]
-                    elif n==right and left==2:
-                        to_add = [[row,col-1,1-n]]
-                    if n==low and high==2:
-                        to_add += [[row-1,col,1-n]]
-                    elif n==high and low==2:
-                        to_add += [[row+1,col,1-n]]
-                for elem in to_add:
-                    if [elem[0],elem[1]] not in added:
-                        direct+=[elem]
-                        added += [[elem[0],elem[1]]]
-                    elif elem[2] != [rcn for rcn in direct if (rcn[0]==elem[0] and rcn[1]==elem[1])][0][2]:
-                        return [[],[]]
+                direct,indirect,added,done_indirect = self.wanghao(row,col,direct,indirect,added,done_indirect)
+                if done_indirect==-1: #conflito
+                    return [[],[]]
         return [direct,indirect]
                         
     def __str__(self):
@@ -142,7 +150,6 @@ class Board:
         """Lê o test do standard input (stdin) que é passado como argumento
         e retorna uma instância da classe Board.
         """
-        readInput = True
         size = int(sys.stdin.readline())
         tabl = np.zeros(shape=(size,size), dtype=np.ubyte)
         for i in range(size):
@@ -158,7 +165,6 @@ class TakuzuState:
     state_id = 0
     intConst = 180
     def __init__(self, board: Board, n_filled = -1, rows=[], cols = []):
-        #, rows = -1, cols = -1):
         self.board = board
         self.n_filled = n_filled if n_filled!=-1 else board.countOccupiedPos()
         self.id = TakuzuState.state_id
@@ -224,18 +230,15 @@ class TakuzuState:
             else: 
                 self.conflicts = True
 
-    
-
     def check_for_conflicts(self,row,col,value):
         """Verificar se a linha 'row' e coluna 'col' satisfazem as regras de Takuzu."""
         self.conflicts = self.board.invalidNumberOfOnesZeros(row,col,value)
         if not(self.conflicts):
             self.check_valid_new_rowcol(row,col)
-       
 
     def num_count_row_col(self,row,col,num):
         """Devolve a soma das quantidades de 'num' na linha 'row' e coluna 'col'."""
-        return np.bincount(self.board.get_col(col))[num] + np.bincount(self.board.get_row(row))[num]            
+        return np.bincount(self.board.get_col(col))[num] + np.bincount(self.board.get_row(row))[num] 
 
 
 
@@ -243,10 +246,11 @@ class TakuzuState:
 
 
 class Takuzu(Problem):
-    def __init__(self, board: Board,heur=1):
+    def __init__(self, board: Board, heur=1):
         """O construtor especifica o estado inicial."""
         super().__init__(TakuzuState(board))
-        self.heur=heur
+        self.heur = heur  
+
 
     def actions(self, state: TakuzuState):
         """Retorna uma lista de ações que podem ser executadas a
@@ -261,6 +265,7 @@ class Takuzu(Problem):
             state.type = "indirect"
             return [[0, all_action[0]]]
 
+
     def result(self, state: TakuzuState, action):
         """Retorna o estado resultante de executar a 'action' sobre
         'state' passado como argumento. A ação a executar deve ser uma
@@ -269,26 +274,21 @@ class Takuzu(Problem):
         type = action[0]
         newState = state.duplicate()
         if type == 0:                       #direct action
-            newState.last_change = []
             for directAction in action[1]:
                 if newState.conflicts:
                     break
                 row, col, num = directAction
                 newState.addNumber(row, col, num)
-                newState.last_change += [[row,col]]
         else:                               #indirect action
             row, col, num = action[1:]
             newState.addNumber(row, col, num)
-            newState.last_change = [row,col]
         return newState
 
     def goal_test(self, state: TakuzuState):
         """Retorna True se e só se o estado passado como argumento é
         um estado objetivo. Deve verificar se todas as posições do tabuleiro
         estão preenchidas com uma sequência de números adjacentes."""
-        return state.filled() and not(state.conflicts) #sera que basta isto?
-        #return state.filled() and state.board.acceptable_zeros_ones_count() and state.board.no_3_adjacent() \
-            #and state.board.all_rows_diff() and state.board.all_cols_diff()
+        return state.filled() and not(state.conflicts) 
 
     def H1(self,node):
         action = node.action
@@ -321,6 +321,8 @@ class Takuzu(Problem):
             return self.H1(node)
         else:
             return self.H2(node)
+        
+
 
     def path_cost(self, cost_so_far, A, action, B):
         if A.type == "indirect":
@@ -329,18 +331,13 @@ class Takuzu(Problem):
             return cost_so_far+(B.board.countOccupiedPos()-A.board.countOccupiedPos())
         
 
-    # TODO: outros metodos da classe
 
 
 if __name__ == "__main__":
     startBoard = Board.parse_instance_from_stdin()
     TakuzuProblem = Takuzu(startBoard)
-    
-    #finalState = breadth_first_tree_search(TakuzuProblem)
-    #finalState = depth_first_tree_search(TakuzuProblem)
-    #finalState = greedy_search(TakuzuProblem)
-    finalState = depth_first_tree_search(TakuzuProblem)
-    print(finalState.state.board)
+    finalNode = depth_first_tree_search(TakuzuProblem)
+    print(finalNode.state.board)
     
     # Ler o ficheiro de input de sys.argv[1],
     # Usar uma técnica de procura para resolver a instância,

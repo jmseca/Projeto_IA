@@ -11,6 +11,8 @@ from collections import deque
 
 from utils import *
 
+from time import perf_counter
+
 
 class Problem:
     """The abstract class for a formal problem. You should subclass
@@ -1526,6 +1528,9 @@ class InstrumentedProblem(Problem):
         self.problem = problem
         self.succs = self.goal_tests = self.states = 0
         self.found = None
+        self.empty_pos = problem.initial.board.get_empty_pos()
+        self.size = problem.initial.board.size
+        self.time_taken = 0
 
     def actions(self, state):
         self.succs += 1
@@ -1552,8 +1557,8 @@ class InstrumentedProblem(Problem):
         return getattr(self.problem, attr)
 
     def __repr__(self):
-        return '<{:4d}/{:4d}/{:4d}/{}>'.format(self.succs, self.goal_tests,
-                                               self.states, str(self.found)[:4])
+        return '<{:4d}/{:4d}/{:4d}/{:.4f}/{}>'.format(self.succs, self.goal_tests,
+                                               self.states, self.time_taken ,str(self.found)[:4])
 
 
 def compare_searchers(problems, #header,
@@ -1562,8 +1567,15 @@ def compare_searchers(problems, #header,
                                  depth_first_graph_search,
                                  greedy_search]):
     def do(searcher, problem):
-        p = InstrumentedProblem(problem)
-        searcher(p)
+        loops = 20
+        times = []
+        for l in range(loops):
+            p = InstrumentedProblem(problem)
+            start = perf_counter()
+            searcher(p)
+            end = perf_counter()
+            times += [end-start]
+        p.time_taken = sum(times)/loops
         return p
 
     #table = [[name(s)] + [do(s, p) for p in problems] for s in searchers]
@@ -1577,8 +1589,15 @@ def compare_searchers2(problems, header,
                                  depth_first_graph_search,
                                  greedy_search]):
     def do2(searcher, problem):
-        p = InstrumentedProblem(problem)
-        searcher(p)
+        loops = 10
+        times = []
+        for l in range(loops):
+            p = InstrumentedProblem(problem)
+            start = perf_counter()
+            searcher(p)
+            end = perf_counter()
+            times += [end-start]
+        p.time_taken = (sum(times))/loops
         return p
 
     table = [[name(s)] + [do2(s, p) for p in problems] for s in searchers]
